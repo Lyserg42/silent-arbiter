@@ -26,6 +26,7 @@ module.exports = (guildId) => {
         "1176339019823579296", //jbros-bang-bang-room
         "1141401243537903626", //#timr0ds-100-ticket-room
         "1141412157964161064", //#scheduled-drafts
+        "1176339019823579296"  //#teamjbro-bang-bang-room
       ],
       ROLE_CHANNEL: "1142675186190127225",
       OPT_IN_ROLES: [
