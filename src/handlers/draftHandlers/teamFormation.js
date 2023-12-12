@@ -31,8 +31,121 @@ module.exports = async (channel, draft) => {
         team = "red";
       }
     }
-    console.log("Team formed randomly.")
-  } else if (draft.teamFormation === "captains") {
+    console.log("Team formed randomly.");
+  } else if (draft.teamFormation === "choose captains") {
+    //Captains team formation
+
+    let rows = getPlayerButtonsRows(draft.players);
+
+    await message.edit({
+      content: `Choose the team captains.`,
+      embeds: [getTeamEmbed(draft.redTeam, draft.blueTeam)],
+      components: rows,
+    });
+
+    const redCaptainButton = await message
+      .awaitMessageComponent({
+        time: 300000,
+      })
+      .catch(async (error) => {
+        draft.players = [];
+        await message.edit({
+          content: "Draft was cancelled after timing out.",
+          embeds: [],
+          components: [],
+        });
+      });
+    if (!redCaptainButton) return;
+
+    draft.redCaptain = draft.players.splice(redCaptainButton.customId, 1)[0];
+    draft.redTeam.push(draft.redCaptain);
+
+    await redCaptainButton.reply({
+      content: `You picked ${draft.redCaptain.username}`,
+      ephemeral: true,
+    });
+
+    rows = getPlayerButtonsRows(draft.players);
+
+    await message.edit({
+      content: `Choose the blue team captain.`,
+      embeds: [getTeamEmbed(draft.redTeam, draft.blueTeam)],
+      components: rows,
+    });
+
+    const blueCaptainButton = await message
+      .awaitMessageComponent({
+        time: 300000,
+      })
+      .catch(async (error) => {
+        draft.players = [];
+        await message.edit({
+          content: "Draft was cancelled after timing out.",
+          embeds: [],
+          components: [],
+        });
+      });
+    if (!blueCaptainButton) return;
+
+    draft.blueCaptain = draft.players.splice(blueCaptainButton.customId, 1)[0];
+    draft.blueTeam.push(draft.blueCaptain);
+
+    await blueCaptainButton.reply({
+      content: `You picked ${draft.blueCaptain.username}`,
+      ephemeral: true,
+    });
+
+    let pickCounter = 0;
+    let picker;
+
+    while (draft.players.length > 0) {
+      if (DRAFT_ORDER.at(pickCounter) === 0) {
+        picker = { captain: draft.redCaptain, team: draft.redTeam };
+      } else {
+        picker = { captain: draft.blueCaptain, team: draft.blueTeam };
+      }
+
+      let rows = getPlayerButtonsRows(draft.players);
+
+      await message.edit({
+        content: `${draft.redCaptain.username} and ${draft.blueCaptain.username} are the team captains.`,
+        embeds: [getTeamEmbed(draft.redTeam, draft.blueTeam, picker)],
+        components: rows,
+      });
+
+      const buttonClicked = await message
+        .awaitMessageComponent({
+          time: 300000,
+        })
+        .catch(async (error) => {
+          draft.players = [];
+          await message.edit({
+            content: "Draft was cancelled after timing out.",
+            embeds: [],
+            components: [],
+          });
+        });
+      if (!buttonClicked) return;
+
+      if (buttonClicked.member.user != picker.captain) {
+        await buttonClicked.reply({
+          content: "Don't click that!",
+          ephemeral: true,
+        });
+      } else {
+        const pickedPlayer = draft.players
+          .splice(buttonClicked.customId, 1)
+          .at(0);
+        picker.team.push(pickedPlayer);
+        pickCounter++;
+        await buttonClicked.reply({
+          content: `You picked ${pickedPlayer.username}`,
+          ephemeral: true,
+        });
+      }
+    }
+    console.log("Team formed with chosen captains.");
+  } else if (draft.teamFormation === "random captains") {
     //Captains team formation
 
     const redCaptainIndex = Math.floor(Math.random() * draft.players.length);
@@ -93,7 +206,7 @@ module.exports = async (channel, draft) => {
         });
       }
     }
-    console.log("Team formed with captains.")
+    console.log("Team formed with random captains.");
   }
 
   await message.edit({

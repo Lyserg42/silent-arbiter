@@ -1,10 +1,13 @@
-const { Client, ChatInputCommandInteraction, ApplicationCommandOptionType} = require("discord.js");
+const {
+  Client,
+  ChatInputCommandInteraction,
+  ApplicationCommandOptionType,
+} = require("discord.js");
 const queue = require("../../handlers/draftHandlers/queue.js");
 const teamFormation = require("../../handlers/draftHandlers/teamFormation.js");
 const pairings = require("../../handlers/draftHandlers/pairings.js");
 const guildEnv = require("../../guildEnv.js");
 const Draft = require("../../models/draftClass.js");
-
 
 let ongoingDrafts = new Map();
 
@@ -14,8 +17,14 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    */
   callback: async (client, interaction) => {
-    console.log(`Draft command called by ${interaction.user.username} in ${interaction.channel.name}`)
-    if(guildEnv(interaction.guildId).DRAFT_CHANNELS.findIndex((c) => c == interaction.channelId) === -1) {
+    console.log(
+      `Draft command called by ${interaction.user.username} in ${interaction.channel.name}`
+    );
+    if (
+      guildEnv(interaction.guildId).DRAFT_CHANNELS.findIndex(
+        (c) => c == interaction.channelId
+      ) === -1
+    ) {
       interaction.reply({
         content: "You can't use this command in this channel.",
         ephemeral: true,
@@ -23,9 +32,10 @@ module.exports = {
       return;
     }
     try {
-      if(ongoingDrafts.get(interaction.channelId)) {
+      if (ongoingDrafts.get(interaction.channelId)) {
         interaction.reply({
-          content: "There is already an ongoing draft in this channel. Complete or cancel this draft before starting a new one.",
+          content:
+            "There is already an ongoing draft in this channel. Complete or cancel this draft before starting a new one.",
         });
         return;
       }
@@ -33,7 +43,7 @@ module.exports = {
       let draft = new Draft();
       draft.leader = interaction.user;
       draft.status = "queue";
-      if(interaction.options.get("team-formation")) {
+      if (interaction.options.get("team-formation")) {
         draft.teamFormation = interaction.options.get("team-formation").value;
       }
       while (true) {
@@ -73,16 +83,20 @@ module.exports = {
       name: "team-formation",
       description: "Choose how the teams are formed.",
       type: ApplicationCommandOptionType.String,
-      choices : [
+      choices: [
         {
           name: "random",
-          value: "random"
+          value: "random",
         },
         {
-          name: "captains",
-          value: "captains"
-        }
-      ]
-    }
-  ]
+          name: "choose captains",
+          value: "choose captains",
+        },
+        {
+          name: "random captains",
+          value: "random captains",
+        },
+      ],
+    },
+  ],
 };
